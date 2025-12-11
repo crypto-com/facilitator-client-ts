@@ -1,0 +1,55 @@
+{
+  "name": "@crypto.com/facilitator-sdk",
+  "version": "1.0.0",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crypto-com/facilitator-client-ts.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint . --ext .ts",
+    "prepare": "npm run build",
+    "publish": "npm publish --access public"
+  },
+  "author": "info@crypto.com",
+  "license": "MIT",
+  "description": "Typescript client for the cronos Facilitator API",
+  "keywords": [
+    "AI",
+    "LLM",
+    "API",
+    "nodejs"
+  ],
+  "bugs": {
+    "url": "https://github.com/crypto-com/facilitator-client-ts/issues"
+  },
+  "homepage": "https://github.com/crypto-com/facilitator-client-ts#readme",
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.24.1",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "prettier": "2.5.1",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "tslib": "^2.6.2"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "ethers": "^6.15.0",
+    "tweetnacl": "^1.0.3"
+  }
+}
