@@ -1,4 +1,40 @@
-import { VerifyRequest } from './integrations/facilitator.interface.js';
+import {
+  ClientConfig,
+  Scheme,
+  CronosNetwork,
+  PaymentRequirements,
+  VerifyRequest,
+  FacilitatorResponse,
+  Eip3009Payload,
+  Eip3009PaymentHeader,
+  X402Kind,
+  X402OutputSchema,
+  X402PaymentRequirements,
+  X402DiscoverResponse,
+  X402SupportedResponse,
+  X402EventType,
+  X402VerifyResponse,
+  X402SettleResponse,
+} from './integrations/facilitator.interface.js';
+
 import { Facilitator } from './lib/client/index.js';
 
-export { Facilitator, VerifyRequest };
+export {
+  Facilitator,
+  ClientConfig,
+  Scheme,
+  CronosNetwork,
+  PaymentRequirements,
+  VerifyRequest,
+  FacilitatorResponse,
+  Eip3009Payload,
+  Eip3009PaymentHeader,
+  X402Kind,
+  X402OutputSchema,
+  X402PaymentRequirements,
+  X402DiscoverResponse,
+  X402SupportedResponse,
+  X402EventType,
+  X402VerifyResponse,
+  X402SettleResponse,
+};
