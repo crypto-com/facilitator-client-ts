@@ -16,7 +16,7 @@ export interface ClientConfig {
  * payment must match the required amount exactly rather than range-based.
  */
 export enum Scheme {
-  Exact = 'exact',
+  Exact = "exact",
 }
 
 /**
@@ -26,10 +26,10 @@ export enum Scheme {
  */
 export enum CronosNetwork {
   /** Cronos EVM Mainnet */
-  CronosMainnet = 'cronos-mainnet',
+  CronosMainnet = "cronos-mainnet",
 
   /** Cronos EVM Testnet (chainId: 338) */
-  CronosTestnet = 'cronos-testnet',
+  CronosTestnet = "cronos-testnet",
 }
 
 /**
@@ -51,7 +51,7 @@ export interface PaymentRequirements {
   payTo: string;
 
   /** ERC-20 token contract address (e.g., USDCe). */
-  asset: string;
+  asset: Contract;
 
   /** Human-readable explanation of the payment purpose. */
   description: string;
@@ -97,16 +97,6 @@ export interface VerifyRequest {
 }
 
 /**
- * Generic facilitator response shape.
- *
- * The facilitator backend may return variable metadata depending
- * on the endpoint and execution path.
- */
-export interface FacilitatorResponse {
-  [key: string]: any;
-}
-
-/**
  * Low-level EIP-3009 payload.
  *
  * Represents the raw message signed by the payer using
@@ -137,7 +127,7 @@ export interface Eip3009Payload {
   signature: string;
 
   /** ERC-20 token contract address. */
-  asset: string;
+  asset: Contract;
 }
 
 /**
@@ -184,13 +174,13 @@ export interface X402Kind {
 export interface X402OutputSchema {
   input: {
     /** Type of request (always `"http"`). */
-    type: 'http';
+    type: "http";
 
     /** Allowed HTTP methods. */
-    method: 'GET' | 'POST';
+    method: "GET" | "POST";
 
     /** Optional body content type. */
-    bodyType?: 'json' | 'form-data' | 'multipart-form-data' | 'text' | 'binary';
+    bodyType?: "json" | "form-data" | "multipart-form-data" | "text" | "binary";
 
     /** Optional query parameter schema. */
     queryParams?: Record<string, FieldDef>;
@@ -273,10 +263,10 @@ export interface X402SupportedResponse {
  */
 export enum X402EventType {
   /** Payment successfully settled on-chain. */
-  PaymentSettled = 'payment.settled',
+  PaymentSettled = "payment.settled",
 
   /** Payment verification or execution failed. */
-  PaymentFailed = 'payment.failed',
+  PaymentFailed = "payment.failed",
 }
 
 /**
@@ -328,4 +318,30 @@ export interface X402SettleResponse {
 
   /** Optional error message for failed events. */
   error?: string;
+}
+
+/**
+ * Supported ERC-20 contract addresses accepted by the Cronos X402 facilitator.
+ *
+ * These contracts implement the **EIP-3009 TransferWithAuthorization**
+ * interface and are validated by the facilitator during verification
+ * and settlement.
+ *
+ * The SDK restricts payments to this enum to prevent unsupported
+ * or unsafe token usage.
+ */
+export enum Contract {
+  /**
+   * USDCe contract address on Cronos mainnet.
+   *
+   * Implements EIP-3009 and is accepted by the production facilitator.
+   */
+  USDCe = "0xf951eC28187D9E5Ca673Da8FE6757E6f0Be5F77C",
+
+  /**
+   * USDCe contract address on Cronos testnet.
+   *
+   * Intended for development and testing environments only.
+   */
+  DevUSDCe = "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0",
 }

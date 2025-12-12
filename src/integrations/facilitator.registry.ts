@@ -1,5 +1,5 @@
 import { generateCronosPaymentHeader } from "../lib/utils/payment.header.js";
-import { CronosNetwork } from "./facilitator.interface.js";
+import { Contract, CronosNetwork } from "./facilitator.interface.js";
 
 /**
  * @module NETWORK_REGISTRY
@@ -12,14 +12,14 @@ import { CronosNetwork } from "./facilitator.interface.js";
  * - **RPC endpoint** used for signing and chain metadata resolution
  *
  * The Facilitator SDK uses this registry to:
- * - auto-select the correct token contract for each network  
- * - resolve the correct EIP-712 domain values (chainId, verifying contract)  
- * - provide the correct RPC URL when constructing signers  
- * - select the correct header-generation function  
+ * - auto-select the correct token contract for each network
+ * - resolve the correct EIP-712 domain values (chainId, verifying contract)
+ * - provide the correct RPC URL when constructing signers
+ * - select the correct header-generation function
  *
  * This registry is intentionally **frozen** (`as const`) to ensure:
- * - SDK consumers cannot mutate network config at runtime  
- * - all values remain strongly typed  
+ * - SDK consumers cannot mutate network config at runtime
+ * - all values remain strongly typed
  *
  * ---
  *
@@ -44,13 +44,13 @@ export const NETWORK_REGISTRY = {
   /**
    * Configuration for **Cronos EVM Mainnet**.
    *
-   * - `asset`: USDCe contract on Cronos mainnet  
-   * - `headerGenerator`: Shared EIP-3009 header builder  
-   * - `rpc_url`: Canonical mainnet RPC endpoint  
+   * - `asset`: USDCe contract on Cronos mainnet
+   * - `headerGenerator`: Shared EIP-3009 header builder
+   * - `rpc_url`: Canonical mainnet RPC endpoint
    */
   [CronosNetwork.CronosMainnet]: {
     /** Default ERC-20 asset for mainnet X402 payments (USDCe). */
-    asset: "0xf951eC28187D9E5Ca673Da8FE6757E6f0Be5F77C",
+    asset: Contract.USDCe,
 
     /**
      * Header constructor used to generate Base64-encoded X402 payment headers
@@ -65,13 +65,13 @@ export const NETWORK_REGISTRY = {
   /**
    * Configuration for **Cronos EVM Testnet** (chainId: 338).
    *
-   * - `asset`: USDCe testnet contract  
-   * - `headerGenerator`: Shared EIP-3009 header builder  
-   * - `rpc_url`: Official Cronos testnet RPC  
+   * - `asset`: USDCe testnet contract
+   * - `headerGenerator`: Shared EIP-3009 header builder
+   * - `rpc_url`: Official Cronos testnet RPC
    */
   [CronosNetwork.CronosTestnet]: {
     /** Default ERC-20 asset for testnet X402 payments (USDCe test deployment). */
-    asset: "0xc01efAaF7C5C61bEbFAeb358E1161b537b8bC0e0",
+    asset: Contract.DevUSDCe,
 
     /** Header generator used to create EIP-3009 X402 headers for testnet. */
     headerGenerator: generateCronosPaymentHeader,
@@ -85,8 +85,8 @@ export const NETWORK_REGISTRY = {
  * Strongly typed representation of the network registry object.
  *
  * Enables:
- * - compile-time lookup safety  
- * - autocompletion of registry keys and fields  
- * - strict typing for dynamic access  
+ * - compile-time lookup safety
+ * - autocompletion of registry keys and fields
+ * - strict typing for dynamic access
  */
 export type NetworkRegistry = typeof NETWORK_REGISTRY;

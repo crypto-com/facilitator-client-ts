@@ -1,4 +1,9 @@
-import { FacilitatorResponse, VerifyRequest } from "./facilitator.interface.js";
+import {
+  VerifyRequest,
+  X402SupportedResponse,
+  X402VerifyResponse,
+  X402SettleResponse,
+} from './facilitator.interface.js';
 
 /**
  * @constant
@@ -14,8 +19,8 @@ import { FacilitatorResponse, VerifyRequest } from "./facilitator.interface.js";
  * @private
  */
 const headers = {
-  "Content-Type": "application/json",
-  "X402-Version": "1",
+  'Content-Type': 'application/json',
+  'X402-Version': '1',
 };
 
 /**
@@ -33,7 +38,7 @@ const headers = {
  * @async
  * @param {string} baseUrl - Base URL of the facilitator backend (e.g., `"https://facilitator.cronoslabs.org"`).
  *
- * @returns {Promise<FacilitatorResponse>}
+ * @returns {Promise<X402SupportedResponse>}
  * Parsed response data describing the supported X402 configuration.
  *
  * @throws {Error}
@@ -47,9 +52,7 @@ const headers = {
  * // → [{ x402Version: 1, scheme: "exact", network: "cronos-testnet" }, ...]
  * ```
  */
-export async function getSupported(
-  baseUrl: string
-): Promise<FacilitatorResponse> {
+export async function getSupported(baseUrl: string): Promise<X402SupportedResponse> {
   const res = await fetch(`${baseUrl}/v2/x402/supported`);
   const text = await res.text();
 
@@ -61,9 +64,7 @@ export async function getSupported(
   }
 
   if (!res.ok) {
-    throw new Error(
-      `getSupported failed: ${res.status} – ${JSON.stringify(json)}`
-    );
+    throw new Error(`getSupported failed: ${res.status} – ${JSON.stringify(json)}`);
   }
 
   return json;
@@ -91,10 +92,10 @@ export async function getSupported(
  * @param {string} baseUrl - Base URL of the facilitator backend.
  * @param {VerifyRequest} body - Body containing `paymentHeader` and `paymentRequirements`.
  *
- * @returns {Promise<FacilitatorResponse>} The structured verification response.
+ * @returns {Promise<X402VerifyResponse>} The structured verification response.
  *
  * @throws {Error}
- * If the facilitator returns a non-OK HTTP status.  
+ * If the facilitator returns a non-OK HTTP status.
  * The error includes the exact payload returned by the server.
  *
  * ---
@@ -110,12 +111,9 @@ export async function getSupported(
  * console.log(verify.invalidReason);
  * ```
  */
-export async function verifyPayment(
-  baseUrl: string,
-  body: VerifyRequest
-): Promise<FacilitatorResponse> {
+export async function verifyPayment(baseUrl: string, body: VerifyRequest): Promise<X402VerifyResponse> {
   const res = await fetch(`${baseUrl}/v2/x402/verify`, {
-    method: "POST",
+    method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
@@ -147,7 +145,7 @@ export async function verifyPayment(
  * - Transfer the specified asset from the signer to the recipient
  * - Return a transaction hash and settlement metadata
  *
- * **Important:** A payment must be successfully verified via `/verify`  
+ * **Important:** A payment must be successfully verified via `/verify`
  * before it can be settled.
  *
  * ---
@@ -155,7 +153,7 @@ export async function verifyPayment(
  * @param {string} baseUrl - Base URL of the facilitator backend.
  * @param {VerifyRequest} body - The exact same body used for verification.
  *
- * @returns {Promise<FacilitatorResponse>} Settlement response including tx hash.
+ * @returns {Promise<X402SettleResponse>} Settlement response including tx hash.
  *
  * @throws {Error}
  * If settlement fails or if the facilitator returns a non-OK status code.
@@ -167,12 +165,9 @@ export async function verifyPayment(
  * console.log(settle.txHash);
  * ```
  */
-export async function settlePayment(
-  baseUrl: string,
-  body: VerifyRequest
-): Promise<FacilitatorResponse> {
+export async function settlePayment(baseUrl: string, body: VerifyRequest): Promise<X402SettleResponse> {
   const res = await fetch(`${baseUrl}/v2/x402/settle`, {
-    method: "POST",
+    method: 'POST',
     headers,
     body: JSON.stringify(body),
   });

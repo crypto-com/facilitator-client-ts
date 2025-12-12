@@ -1,17 +1,24 @@
-import { ethers } from 'ethers';
-import { getSupported, settlePayment, verifyPayment } from '../../integrations/facilitator.api.js';
+import { ethers } from "ethers";
+import {
+  getSupported,
+  settlePayment,
+  verifyPayment,
+} from "../../integrations/facilitator.api.js";
 import {
   ClientConfig,
   CronosNetwork,
-  FacilitatorResponse,
+  X402SupportedResponse,
+  X402VerifyResponse,
+  X402SettleResponse,
   PaymentRequirements,
   VerifyRequest,
   X402OutputSchema,
-} from '../../integrations/facilitator.interface.js';
+  Contract,
+} from "../../integrations/facilitator.interface.js";
 
-import { generatePaymentRequirements } from '../utils/payment.requirements.js';
-import { NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
-import { generateCronosPaymentHeader } from '../utils/payment.header.js';
+import { generatePaymentRequirements } from "../utils/payment.requirements.js";
+import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
+import { generateCronosPaymentHeader } from "../utils/payment.header.js";
 
 /**
  * @constant
@@ -25,7 +32,7 @@ import { generateCronosPaymentHeader } from '../utils/payment.header.js';
  * @type {string}
  * @private
  */
-const FACILITATOR_BASE_URL: string = 'https://facilitator.cronoslabs.org';
+const FACILITATOR_BASE_URL: string = "https://facilitator.cronoslabs.org";
 
 /**
  * @class Facilitator
@@ -107,7 +114,7 @@ export class Facilitator {
    * @type {string}
    * Default ERC-20 token used for payments (usually USDCe).
    */
-  private defaultAsset: string;
+  private defaultAsset: Contract;
 
   /**
    * @private
@@ -145,7 +152,7 @@ export class Facilitator {
    * Fetches facilitator-supported networks, schemes, and configuration metadata.
    *
    * @async
-   * @returns {Promise<FacilitatorResponse>} Supported X402 capabilities.
+   * @returns {Promise<X402SupportedResponse>} Supported X402 capabilities.
    *
    * @example
    * ```ts
@@ -153,7 +160,7 @@ export class Facilitator {
    * console.log(supported.kinds);
    * ```
    */
-  async getSupported(): Promise<FacilitatorResponse> {
+  async getSupported(): Promise<X402SupportedResponse> {
     return await getSupported(this.baseUrl);
   }
 
@@ -167,7 +174,7 @@ export class Facilitator {
    *
    * @async
    * @param {VerifyRequest} request - Combined `paymentHeader` and `paymentRequirements`.
-   * @returns {Promise<FacilitatorResponse>} Verification result.
+   * @returns {Promise<X402VerifyResponse>} Verification result.
    *
    * @example
    * ```ts
@@ -175,7 +182,7 @@ export class Facilitator {
    * console.log(verify.isValid);
    * ```
    */
-  async verifyPayment(request: VerifyRequest): Promise<FacilitatorResponse> {
+  async verifyPayment(request: VerifyRequest): Promise<X402VerifyResponse> {
     return await verifyPayment(this.baseUrl, request);
   }
 
@@ -186,7 +193,7 @@ export class Facilitator {
    *
    * @async
    * @param {VerifyRequest} request - Same body used for verification.
-   * @returns {Promise<FacilitatorResponse>} Settlement result including tx hash.
+   * @returns {Promise<X402SettleResponse>} Settlement result including tx hash.
    *
    * @example
    * ```ts
@@ -194,7 +201,7 @@ export class Facilitator {
    * console.log(settle.txHash);
    * ```
    */
-  async settlePayment(request: VerifyRequest): Promise<FacilitatorResponse> {
+  async settlePayment(request: VerifyRequest): Promise<X402SettleResponse> {
     return await settlePayment(this.baseUrl, request);
   }
 
@@ -232,7 +239,7 @@ export class Facilitator {
   async generatePaymentHeader(options: {
     to: string;
     value: string;
-    asset?: string;
+    asset?: Contract;
     signer: ethers.Wallet | ethers.Signer;
     validAfter?: number;
     validBefore?: number;
@@ -278,7 +285,7 @@ export class Facilitator {
    */
   generatePaymentRequirements(options: {
     payTo: string;
-    asset?: string;
+    asset?: Contract;
     description?: string;
     maxAmountRequired?: string;
     mimeType?: string;
@@ -316,7 +323,10 @@ export class Facilitator {
    * const response = await facilitator.verifyPayment(body);
    * ```
    */
-  buildVerifyRequest(paymentHeader: string, paymentRequirements: PaymentRequirements): VerifyRequest {
+  buildVerifyRequest(
+    paymentHeader: string,
+    paymentRequirements: PaymentRequirements
+  ): VerifyRequest {
     return {
       x402Version: 1,
       paymentHeader,

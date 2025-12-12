@@ -1,10 +1,11 @@
 import {
+  Contract,
   CronosNetwork,
   PaymentRequirements,
   Scheme,
   X402OutputSchema,
-} from '../../integrations/facilitator.interface.js';
-import { NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
+} from "../../integrations/facilitator.interface.js";
+import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
 
 /**
  * @function generatePaymentRequirements
@@ -79,7 +80,7 @@ import { NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
 export const generatePaymentRequirements = (options: {
   network: CronosNetwork;
   payTo: string;
-  asset?: string;
+  asset?: Contract;
   description?: string;
   maxAmountRequired?: string;
   mimeType?: string;
@@ -92,9 +93,9 @@ export const generatePaymentRequirements = (options: {
     network,
     payTo,
     asset,
-    description = 'X402 payment request',
-    maxAmountRequired = '1000',
-    mimeType = 'application/json',
+    description = "X402 payment request",
+    maxAmountRequired = "1000",
+    mimeType = "application/json",
     maxTimeoutSeconds = 300,
     resource,
     extra,
