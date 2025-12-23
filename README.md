@@ -1,4 +1,4 @@
-# **@crypto.com/facilitator-sdk**
+# **@crypto.com/facilitator-client**
 
 ### **Official Cronos X402 Facilitator SDK**
 
@@ -12,8 +12,8 @@ It allows developers to easily:
 
 This SDK enables fully automated **off-chain authorization / on-chain execution** payments on **Cronos Mainnet** and **Cronos Testnet**.
 
-![npm](https://img.shields.io/npm/v/@crypto.com/facilitator-sdk)
-![License](https://img.shields.io/npm/l/@crypto.com/facilitator-sdk)
+![npm](https://img.shields.io/npm/v/@crypto.com/facilitator-client)
+![License](https://img.shields.io/npm/l/@crypto.com/facilitator-client)
 
 # Features
 
@@ -35,9 +35,9 @@ This SDK enables fully automated **off-chain authorization / on-chain execution*
 # Installation
 
 ```bash
-npm install @crypto.com/facilitator-sdk
+npm install @crypto.com/facilitator-client
 # or
-yarn add @crypto.com/facilitator-sdk
+yarn add @crypto.com/facilitator-client
 ```
 
 # Usage
@@ -47,8 +47,8 @@ yarn add @crypto.com/facilitator-sdk
 > The Facilitator base URL is **fixed internally** and cannot be overridden.
 
 ```ts
-import { Facilitator } from '@crypto.com/facilitator-sdk';
-import { CronosNetwork } from '@crypto.com/facilitator-sdk';
+import { Facilitator } from '@crypto.com/facilitator-client';
+import { CronosNetwork } from '@crypto.com/facilitator-client';
 
 const facilitator = new Facilitator({
   network: CronosNetwork.CronosTestnet, // or CronosMainnet
@@ -107,24 +107,6 @@ const capabilities = await facilitator.getSupported();
 console.log(capabilities);
 ```
 
-# API Overview
-
-### **Client**
-
-| Method                                     | Description                                           |
-| ------------------------------------------ | ----------------------------------------------------- |
-| `getSupported()`                           | Returns supported networks, schemes, and capabilities |
-| `verifyPayment(request)`                   | Validates the Base64 header + requirements            |
-| `settlePayment(request)`                   | Executes the authorized transfer on-chain             |
-| `buildVerifyRequest(header, requirements)` | Helper to produce valid X402 bodies                   |
-
-### **Utilities**
-
-| Function                               | Description                              |
-| -------------------------------------- | ---------------------------------------- |
-| `generatePaymentHeader(options)`       | Creates Base64 EIP-3009 payment header   |
-| `generatePaymentRequirements(options)` | Produces typed X402 Payment Requirements |
-
 # End-to-End Example (Full Flow)
 
 ```ts
@@ -153,6 +135,24 @@ if (verify.isValid) {
   console.log('Transaction:', settle.txHash);
 }
 ```
+
+# API Overview
+
+### **Client**
+
+| Method                                     | Description                                           |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `getSupported()`                           | Returns supported networks, schemes, and capabilities |
+| `verifyPayment(request)`                   | Validates the Base64 header + requirements            |
+| `settlePayment(request)`                   | Executes the authorized transfer on-chain             |
+| `buildVerifyRequest(header, requirements)` | Helper to produce valid X402 bodies                   |
+
+### **Utilities**
+
+| Function                               | Description                              |
+| -------------------------------------- | ---------------------------------------- |
+| `generatePaymentHeader(options)`       | Creates Base64 EIP-3009 payment header   |
+| `generatePaymentRequirements(options)` | Produces typed X402 Payment Requirements |
 
 # License
 
