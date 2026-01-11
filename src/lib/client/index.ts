@@ -1,9 +1,5 @@
-import { ethers } from "ethers";
-import {
-  getSupported,
-  settlePayment,
-  verifyPayment,
-} from "../../integrations/facilitator.api.js";
+import { ethers } from 'ethers';
+import { getSupported, settlePayment, verifyPayment } from '../../integrations/facilitator.api.js';
 import {
   ClientConfig,
   CronosNetwork,
@@ -14,11 +10,11 @@ import {
   VerifyRequest,
   X402OutputSchema,
   Contract,
-} from "../../integrations/facilitator.interface.js";
+} from '../../integrations/facilitator.interface.js';
 
-import { generatePaymentRequirements } from "../utils/payment.requirements.js";
-import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
-import { generateCronosPaymentHeader } from "../utils/payment.header.js";
+import { generatePaymentRequirements } from '../utils/payment.requirements.js';
+import { NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
+import { generateCronosPaymentHeader } from '../utils/payment.header.js';
 
 /**
  * @constant
@@ -32,7 +28,7 @@ import { generateCronosPaymentHeader } from "../utils/payment.header.js";
  * @type {string}
  * @private
  */
-const FACILITATOR_BASE_URL: string = "https://facilitator.cronoslabs.org";
+const FACILITATOR_BASE_URL: string = 'https://facilitator.cronoslabs.org';
 
 /**
  * @class Facilitator
@@ -323,10 +319,7 @@ export class Facilitator {
    * const response = await facilitator.verifyPayment(body);
    * ```
    */
-  buildVerifyRequest(
-    paymentHeader: string,
-    paymentRequirements: PaymentRequirements
-  ): VerifyRequest {
+  buildVerifyRequest(paymentHeader: string, paymentRequirements: PaymentRequirements): VerifyRequest {
     return {
       x402Version: 1,
       paymentHeader,

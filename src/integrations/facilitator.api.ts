@@ -1,114 +1,131 @@
-import {
+import type {
   VerifyRequest,
   X402SupportedResponse,
   X402VerifyResponse,
   X402SettleResponse,
 } from './facilitator.interface.js';
 
+import {
+  assertX402SupportedResponse,
+  assertX402VerifyResponse,
+  assertX402SettleResponse,
+} from './facilitator.guards.js';
+
 /**
- * @constant
- * @name headers
- * @description
- * Default HTTP headers used for all requests sent to the Cronos X402 Facilitator API.
- *
- * Includes:
- * - `Content-Type: application/json`
- * - `X402-Version: 1`
- *
- * @type {Record<string, string>}
- * @private
+ * Default HTTP headers used for all X402 facilitator requests.
  */
-const headers = {
+const headers: Record<string, string> = {
   'Content-Type': 'application/json',
   'X402-Version': '1',
 };
 
+type JsonOrRaw = unknown;
+
+/**
+ * @function readJsonOrRaw
+ * @description
+ * Reads an HTTP response body and attempts to parse it as JSON.
+ *
+ * If parsing fails, returns the raw text payload instead.
+ *
+ * This is useful for surfacing non-JSON error responses from the facilitator.
+ *
+ * @param {Response} res - Fetch response object.
+ * @returns {Promise<unknown>} Parsed JSON or `{ raw: string }`.
+ */
+async function readJsonOrRaw(res: Response): Promise<JsonOrRaw> {
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return { raw: text };
+  }
+}
+
+/**
+ * @function stringifySafe
+ * @description
+ * Safely stringifies any value for error reporting.
+ *
+ * Prevents crashes from circular references or invalid JSON values.
+ *
+ * @param {unknown} v - Value to stringify.
+ * @returns {string} Safe string representation.
+ */
+function stringifySafe(v: unknown): string {
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return '"[unstringifiable]"';
+  }
+}
+
 /**
  * @function getSupported
  * @description
- * Fetches a description of the **supported networks, token assets, and X402 capabilities**
- * exposed by the facilitator backend.
+ * Fetches the list of **supported X402 payment kinds** from a facilitator.
  *
- * This is typically called during SDK initialization or health-check flows.
- *
- * The function returns the parsed API response even on non-JSON payloads, and
- * throws a descriptive error including any error body returned by the server.
+ * Calls the `/v2/x402/supported` endpoint and validates the response schema.
  *
  * ---
- * @async
- * @param {string} baseUrl - Base URL of the facilitator backend (e.g., `"https://facilitator.cronoslabs.org"`).
+ * @param {string} baseUrl - Facilitator base URL.
+ * @returns {Promise<X402SupportedResponse>} Supported payment kinds.
  *
- * @returns {Promise<X402SupportedResponse>}
- * Parsed response data describing the supported X402 configuration.
- *
- * @throws {Error}
- * If the request fails or if the server responds with a non-OK status.
+ * @throws {Error} If the request fails or the response schema is invalid.
  *
  * ---
- * @example <caption>Fetch supported networks</caption>
+ * @example
  * ```ts
- * const supported = await getSupported("https://facilitator.cronoslabs.org");
- * console.log(supported.kinds);
- * // → [{ x402Version: 1, scheme: "exact", network: "cronos-testnet" }, ...]
+ * const supported = await getSupported("https://facilitator.example.com");
+ *
+ * supported.kinds.forEach(k => {
+ *   console.log(`${k.network}: ${k.scheme}`);
+ * });
  * ```
  */
 export async function getSupported(baseUrl: string): Promise<X402SupportedResponse> {
   const res = await fetch(`${baseUrl}/v2/x402/supported`);
-  const text = await res.text();
-
-  let json: any = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    json = { raw: text };
-  }
+  const payload = await readJsonOrRaw(res);
 
   if (!res.ok) {
-    throw new Error(`getSupported failed: ${res.status} – ${JSON.stringify(json)}`);
+    throw new Error(`getSupported failed: ${res.status} – ${stringifySafe(payload)}`);
   }
 
-  return json;
+  assertX402SupportedResponse(payload);
+  return payload;
 }
 
 /**
  * @function verifyPayment
  * @description
- * Calls the facilitator's **`/verify`** endpoint to validate an X402 payment request.
+ * Submits a payment for **X402 verification**.
  *
- * Verification ensures:
- * - The Base64 payment header is valid and decodable
- * - The EIP-3009 signature is correct
- * - The payment requirements match the header contents
- * - Timestamps (`validAfter`, `validBefore`) are valid
- * - The nonce has not been used previously
- *
- * This step must be completed **before** attempting settlement.
- *
- * The function returns the backend's JSON response even when the server returns
- * non-200 errors, providing full debugging detail.
+ * Calls the facilitator `/v2/x402/verify` endpoint to validate:
+ * - payment header
+ * - requirements
+ * - signature
+ * - expiry window
  *
  * ---
- * @async
- * @param {string} baseUrl - Base URL of the facilitator backend.
- * @param {VerifyRequest} body - Body containing `paymentHeader` and `paymentRequirements`.
+ * @param {string} baseUrl - Facilitator base URL.
+ * @param {VerifyRequest} body - Verification request payload.
+ * @returns {Promise<X402VerifyResponse>} Verification result.
  *
- * @returns {Promise<X402VerifyResponse>} The structured verification response.
- *
- * @throws {Error}
- * If the facilitator returns a non-OK HTTP status.
- * The error includes the exact payload returned by the server.
+ * @throws {Error} If the request fails or the response schema is invalid.
  *
  * ---
- * @example <caption>Verify a payment request</caption>
+ * @example
  * ```ts
- * const verify = await verifyPayment(BASE_URL, {
- *   x402Version: 1,
+ * const result = await verifyPayment(baseUrl, {
  *   paymentHeader,
- *   paymentRequirements
+ *   paymentRequirements,
  * });
  *
- * console.log(verify.isValid);   // true | false
- * console.log(verify.invalidReason);
+ * if (!result.isValid) {
+ *   throw new Error(result.invalidReason);
+ * }
  * ```
  */
 export async function verifyPayment(baseUrl: string, body: VerifyRequest): Promise<X402VerifyResponse> {
@@ -118,51 +135,42 @@ export async function verifyPayment(baseUrl: string, body: VerifyRequest): Promi
     body: JSON.stringify(body),
   });
 
-  const text = await res.text();
-
-  let json: any = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    json = { raw: text };
-  }
+  const payload = await readJsonOrRaw(res);
 
   if (!res.ok) {
-    throw new Error(`Verify failed: ${res.status} – ${JSON.stringify(json)}`);
+    throw new Error(`Verify failed: ${res.status} – ${stringifySafe(payload)}`);
   }
 
-  return json;
+  assertX402VerifyResponse(payload);
+  return payload;
 }
 
 /**
  * @function settlePayment
  * @description
- * Calls the facilitator **`/settle`** endpoint to execute a previously verified
- * EIP-3009 authorization on-chain.
+ * Submits a verified payment for **on-chain settlement**.
  *
- * Settlement is the final step in the X402 flow and will:
- * - Submit the EIP-3009 authorization for on-chain execution
- * - Transfer the specified asset from the signer to the recipient
- * - Return a transaction hash and settlement metadata
- *
- * **Important:** A payment must be successfully verified via `/verify`
- * before it can be settled.
+ * Calls the facilitator `/v2/x402/settle` endpoint which:
+ * - broadcasts the signed transaction
+ * - waits for confirmation
+ * - returns settlement metadata
  *
  * ---
- * @async
- * @param {string} baseUrl - Base URL of the facilitator backend.
- * @param {VerifyRequest} body - The exact same body used for verification.
+ * @param {string} baseUrl - Facilitator base URL.
+ * @param {VerifyRequest} body - Settlement request payload.
+ * @returns {Promise<X402SettleResponse>} Settlement result.
  *
- * @returns {Promise<X402SettleResponse>} Settlement response including tx hash.
- *
- * @throws {Error}
- * If settlement fails or if the facilitator returns a non-OK status code.
+ * @throws {Error} If the request fails or the response schema is invalid.
  *
  * ---
- * @example <caption>Settle a verified payment</caption>
+ * @example
  * ```ts
- * const settle = await settlePayment(BASE_URL, verifyRequest);
- * console.log(settle.txHash);
+ * const result = await settlePayment(baseUrl, {
+ *   paymentHeader,
+ *   paymentRequirements,
+ * });
+ *
+ * console.log(result.txHash);
  * ```
  */
 export async function settlePayment(baseUrl: string, body: VerifyRequest): Promise<X402SettleResponse> {
@@ -172,18 +180,12 @@ export async function settlePayment(baseUrl: string, body: VerifyRequest): Promi
     body: JSON.stringify(body),
   });
 
-  const text = await res.text();
-
-  let json: any = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    json = { raw: text };
-  }
+  const payload = await readJsonOrRaw(res);
 
   if (!res.ok) {
-    throw new Error(`Settle failed: ${res.status} – ${JSON.stringify(json)}`);
+    throw new Error(`Settle failed: ${res.status} – ${stringifySafe(payload)}`);
   }
 
-  return json;
+  assertX402SettleResponse(payload);
+  return payload;
 }
