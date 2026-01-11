@@ -239,7 +239,7 @@ export async function generateCronosPaymentHeader(params: {
     name,
     version,
     chainId: chainId,
-    verifyingContract: asset,
+    verifyingContract: tokenAddress,
   };
 
   const types: Record<string, ethers.TypedDataField[]> = {
