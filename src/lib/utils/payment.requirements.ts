@@ -4,8 +4,8 @@ import {
   PaymentRequirements,
   Scheme,
   X402OutputSchema,
-} from "../../integrations/facilitator.interface.js";
-import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
+} from '../../integrations/facilitator.interface.js';
+import { NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
 
 /**
  * @function generatePaymentRequirements
@@ -93,9 +93,9 @@ export const generatePaymentRequirements = (options: {
     network,
     payTo,
     asset,
-    description = "X402 payment request",
-    maxAmountRequired = "1000",
-    mimeType = "application/json",
+    description = 'X402 payment request',
+    maxAmountRequired = '1000',
+    mimeType = 'application/json',
     maxTimeoutSeconds = 300,
     resource,
     extra,

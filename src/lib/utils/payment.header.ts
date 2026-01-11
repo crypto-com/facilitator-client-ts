@@ -1,5 +1,5 @@
-import crypto from "node:crypto";
-import { ethers } from "ethers";
+import crypto from 'node:crypto';
+import { ethers } from 'ethers';
 
 import {
   Eip3009Payload,
@@ -7,8 +7,8 @@ import {
   Eip3009PaymentHeader,
   Scheme,
   Contract,
-} from "../../integrations/facilitator.interface.js";
-import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
+} from '../../integrations/facilitator.interface.js';
+import { EIP712_DOMAIN_BY_NETWORK, NETWORK_REGISTRY } from '../../integrations/facilitator.registry.js';
 
 /**
  * @function randomNonceHex32
@@ -30,20 +30,17 @@ import { NETWORK_REGISTRY } from "../../integrations/facilitator.registry.js";
  * ```
  */
 export const randomNonceHex32 = (): string => {
-  if (
-    typeof globalThis !== "undefined" &&
-    typeof globalThis.crypto?.getRandomValues === "function"
-  ) {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.crypto?.getRandomValues === 'function') {
     const array = new Uint8Array(32);
     globalThis.crypto.getRandomValues(array);
     return (
-      "0x" +
+      '0x' +
       Array.from(array)
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("")
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
     );
   }
-  return "0x" + crypto.randomBytes(32).toString("hex");
+  return '0x' + crypto.randomBytes(32).toString('hex');
 };
 
 /**
@@ -67,10 +64,7 @@ export const randomNonceHex32 = (): string => {
  * console.log(header.x402Version); // 1
  * ```
  */
-export const buildEip3009Header = (
-  payload: Eip3009Payload,
-  network: CronosNetwork
-): Eip3009PaymentHeader => ({
+export const buildEip3009Header = (payload: Eip3009Payload, network: CronosNetwork): Eip3009PaymentHeader => ({
   x402Version: 1,
   scheme: Scheme.Exact,
   network,
@@ -100,13 +94,10 @@ export const buildEip3009Header = (
 export const encodePaymentHeader = (header: Eip3009PaymentHeader): string => {
   const json = JSON.stringify(header);
 
-  if (
-    typeof globalThis !== "undefined" &&
-    typeof globalThis.btoa === "function"
-  ) {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.btoa === 'function') {
     return globalThis.btoa(json);
   }
-  return Buffer.from(json, "utf8").toString("base64");
+  return Buffer.from(json, 'utf8').toString('base64');
 };
 
 /**
@@ -133,13 +124,10 @@ export const encodePaymentHeader = (header: Eip3009PaymentHeader): string => {
  * ```
  */
 export const decodePaymentHeader = (base64String: string): string => {
-  if (
-    typeof globalThis !== "undefined" &&
-    typeof globalThis.atob === "function"
-  ) {
+  if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
     return globalThis.atob(base64String);
   }
-  return Buffer.from(base64String, "base64").toString("utf-8");
+  return Buffer.from(base64String, 'base64').toString('utf-8');
 };
 
 /**
@@ -227,15 +215,13 @@ export async function generateCronosPaymentHeader(params: {
   if (!config) throw new Error(`Unsupported network: ${network}`);
 
   const provider =
-    "provider" in signer && signer.provider
-      ? signer.provider
-      : new ethers.JsonRpcProvider(config.rpc_url);
+    'provider' in signer && signer.provider ? signer.provider : new ethers.JsonRpcProvider(config.rpc_url);
 
   const chain = await provider.getNetwork();
   const chainId = Number(chain.chainId);
 
   const from = await (signer as ethers.Wallet).getAddress?.();
-  if (!from) throw new Error("Unable to resolve signer address");
+  if (!from) throw new Error('Unable to resolve signer address');
 
   const now = Math.floor(Date.now() / 1000);
   const computedValidAfter = validAfter ?? 0;
@@ -244,25 +230,26 @@ export async function generateCronosPaymentHeader(params: {
   const nonce = randomNonceHex32();
   const tokenAddress = asset ?? config.asset;
   if (!tokenAddress) {
-    throw new Error("Token asset address is required (no default configured)");
+    throw new Error('Token asset address is required (no default configured)');
   }
 
-  // Domain / types for EIP-3009
-  const domain: ethers.TypedDataDomain = {
-    name: "Bridged USDC (Stargate)",
-    version: "1",
-    chainId,
-    verifyingContract: tokenAddress,
+  const { name, version } = EIP712_DOMAIN_BY_NETWORK[network];
+
+  const domain = {
+    name,
+    version,
+    chainId: chainId,
+    verifyingContract: asset,
   };
 
   const types: Record<string, ethers.TypedDataField[]> = {
     TransferWithAuthorization: [
-      { name: "from", type: "address" },
-      { name: "to", type: "address" },
-      { name: "value", type: "uint256" },
-      { name: "validAfter", type: "uint256" },
-      { name: "validBefore", type: "uint256" },
-      { name: "nonce", type: "bytes32" },
+      { name: 'from', type: 'address' },
+      { name: 'to', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'validAfter', type: 'uint256' },
+      { name: 'validBefore', type: 'uint256' },
+      { name: 'nonce', type: 'bytes32' },
     ],
   };
 
@@ -277,11 +264,7 @@ export async function generateCronosPaymentHeader(params: {
     nonce,
   };
 
-  const signature = await (signer as ethers.Wallet).signTypedData(
-    domain,
-    types,
-    message
-  );
+  const signature = await (signer as ethers.Wallet).signTypedData(domain, types, message);
 
   const payload: Eip3009Payload = {
     from,

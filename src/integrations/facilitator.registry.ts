@@ -1,5 +1,5 @@
-import { generateCronosPaymentHeader } from "../lib/utils/payment.header.js";
-import { Contract, CronosNetwork } from "./facilitator.interface.js";
+import { generateCronosPaymentHeader } from '../lib/utils/payment.header.js';
+import { AssetName, Contract, CronosNetwork } from './facilitator.interface.js';
 
 /**
  * @module NETWORK_REGISTRY
@@ -59,7 +59,7 @@ export const NETWORK_REGISTRY = {
     headerGenerator: generateCronosPaymentHeader,
 
     /** Public JSON-RPC endpoint for Cronos EVM Mainnet. */
-    rpc_url: "https://evm.cronos.org",
+    rpc_url: 'https://evm.cronos.org',
   },
 
   /**
@@ -77,7 +77,7 @@ export const NETWORK_REGISTRY = {
     headerGenerator: generateCronosPaymentHeader,
 
     /** Public JSON-RPC endpoint for Cronos EVM Testnet. */
-    rpc_url: "https://evm-t3.cronos.org",
+    rpc_url: 'https://evm-t3.cronos.org',
   },
 } as const;
 
@@ -90,3 +90,49 @@ export const NETWORK_REGISTRY = {
  * - strict typing for dynamic access
  */
 export type NetworkRegistry = typeof NETWORK_REGISTRY;
+
+/**
+ * Mapping of **Cronos networks** to their corresponding **EIP-712 domain configuration**
+ * used for signing EIP-3009 `TransferWithAuthorization` messages.
+ *
+ * Each entry defines the domain fields required by the token contract:
+ *
+ * - `name`    → ERC-20 token name used in the domain separator
+ * - `version` → Contract signing version (varies by deployment)
+ *
+ * This mapping is used by the payment header generator to:
+ * - construct the correct EIP-712 typed data payload
+ * - ensure signatures are valid for the target chain and contract
+ * - maintain compatibility across mainnet and testnet deployments
+ *
+ * ---
+ *
+ * @example <caption>Resolve EIP-712 domain for Cronos Mainnet</caption>
+ * ```ts
+ * const domain = EIP712_DOMAIN_BY_NETWORK[CronosNetwork.CronosMainnet];
+ *
+ * console.log(domain);
+ * // { name: "USDCe", version: "2" }
+ * ```
+ *
+ * @example <caption>Use domain when building typed data</caption>
+ * ```ts
+ * const domain = EIP712_DOMAIN_BY_NETWORK[network];
+ *
+ * const typedData = {
+ *   domain,
+ *   types,
+ *   message,
+ * };
+ * ```
+ */
+export const EIP712_DOMAIN_BY_NETWORK: Record<CronosNetwork, { name: string; version: string }> = {
+  [CronosNetwork.CronosMainnet]: {
+    name: AssetName.USDCe,
+    version: '2',
+  },
+  [CronosNetwork.CronosTestnet]: {
+    name: AssetName.USDCe,
+    version: '1',
+  },
+};
